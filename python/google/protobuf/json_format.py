@@ -50,6 +50,7 @@ import math
 from operator import methodcaller
 import re
 import sys
+import datetime
 
 from google.protobuf.internal import type_checkers
 from google.protobuf import descriptor
@@ -277,7 +278,15 @@ class _Printer(object):
 
   def _FieldToJsonObject(self, field, value):
     """Converts field value according to Proto3 JSON Specification."""
+    value_cls = value.__class__.__name__
     if field.cpp_type == descriptor.FieldDescriptor.CPPTYPE_MESSAGE:
+      if value_cls in ("DateTime", "Date"):
+        # todo: timezones, error checks
+        return datetime.datetime.fromtimestamp(getattr(value, "value_us")/1000000)
+      elif value_cls == "Decimal":
+        obj = self._MessageToJsonObject(value)
+        obj["value"] = float(getattr(value, "value"))
+        return obj
       return self._MessageToJsonObject(value)
     elif field.cpp_type == descriptor.FieldDescriptor.CPPTYPE_ENUM:
       if self.use_integers_for_enums:
@@ -302,7 +311,7 @@ class _Printer(object):
     elif field.cpp_type == descriptor.FieldDescriptor.CPPTYPE_BOOL:
       return bool(value)
     elif field.cpp_type in _INT64_TYPES:
-      return str(value)
+      return value
     elif field.cpp_type in _FLOAT_TYPES:
       if math.isinf(value):
         if value < 0.0:
