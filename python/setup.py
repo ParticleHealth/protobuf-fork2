@@ -453,7 +453,6 @@ if __name__ == '__main__':
           'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: 3.10',
       ],
-      namespace_packages=['google'],
       packages=find_packages(
           exclude=[
               'import_test_package',
